@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simulació de Rendiment Esportiu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #ffffff;
+      font-family: 'Inter', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    header h1 {
+      font-size: 30px;
+      font-weight: 700;
+      margin: 0 0 6px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .container {
+      width: 960px;
+      max-width: 96%;
+      margin: 16px auto 20px;
+      padding: 24px;
+      background: rgba(30, 35, 50, 0.85);
+      border-radius: 20px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    /* Pista */
+    #pista {
+      width: 100%;
+      height: 140px;
+      margin: 10px 0 12px;
+      background: linear-gradient(90deg, #3a3a3a, #2a2a2a, #3a3a3a);
+      border: 3px solid #666;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #pista::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 14px;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.25) 0 10px,
+        transparent 10px 20px
+      );
+    }
+
+    #corredor {
+      position: absolute;
+      width: 56px;
+      height: 112px;
+      top: 14px;
+      left: 0;
+      transition: all 0.3s ease;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+
+    #corredor svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Caixa de rendiment */
+    .rendiment-box {
+      background: rgba(40, 45, 65, 0.7);
+      padding: 12px 14px;
+      border-radius: 14px;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    #rendiment-text {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+
+    .bar {
+      height: 12px;
+      width: 100%;
+      background: #222;
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: #ff9800;
+      border-radius: 6px;
+      transition: width 0.35s ease, background 0.35s ease;
+    }
+
+    /* Explicació */
+    .explicacio {
+      margin: 16px 0;
+      font-size: 14px;
+      line-height: 1.45;
+      background: rgba(40, 45, 65, 0.5);
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+
+    .explicacio strong {
+      color: #00e0ff;
+    }
+
+    /* Controls */
+    .controls {
+      margin: 16px 0;
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .slider-group label {
+      width: 190px;
+      text-align: right;
+      margin-right: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+
+    .slider-wrapper {
+      flex-grow: 1;
+      margin-right: 10px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 12px;
+      border-radius: 6px;
+      background: #444;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #00FFFF;
+      border: 2px solid #00B8D4;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+      -webkit-appearance: none;
+    }
+
+    .value {
+      width: 40px;
+      text-align: center;
+      background: rgba(0,0,0,0.45);
+      border-radius: 6px;
+      padding: 4px 0;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.45);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Simulació de rendiment esportiu</h1>
+    <p>Mou les barres per veure com el rendiment i l'aspecte del corredor canvien.</p>
+  </header>
+
+  <div class="container">
+    <!-- Pista i corredor -->
+    <div id="pista">
+      <div id="corredor">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Cap -->
+          <circle id="head" cx="50" cy="25" r="14" fill="#FFD580" />
+          <!-- Cos -->
+          <path id="torso" d="M 40 39 L 60 39 L 60 67 L 55 75 L 60 90 L 40 90 L 45 75 L 40 67 Z"
+                fill="#E0F7FF" stroke="#99CBDC" stroke-width="1.2" />
+          <!-- Braços -->
+          <path d="M 40 45 L 30 60" stroke="#FFD580" stroke-width="7.5" stroke-linecap="round" />
+          <path d="M 60 45 L 70 60" stroke="#FFD580" stroke-width="7.5" stroke-linecap="round" />
+          <!-- Cames -->
+          <path d="M 45 75 L 43 97" stroke="#B0B0B0" stroke-width="6.5" stroke-linecap="round" />
+          <path d="M 55 75 L 57 97" stroke="#B0B0B0" stroke-width="6.5" stroke-linecap="round" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Rendiment -->
+    <div class="rendiment-box">
+      <div id="rendiment-text">Rendiment: 50 / 100</div>
+      <div class="bar">
+        <div id="bar-fill" class="bar-fill"></div>
+      </div>
+    </div>
+
+    <!-- Explicació -->
+    <div class="explicacio">
+      <strong>Què passa aquí?</strong><br>
+      El rendiment esportiu depèn de 5 factors invisibles: <strong>descans, nutrició, recuperació, hàbits de vida i salut mental</strong>.<br><br>
+      - Si tots estan alts, el corredor corre molt ràpid i es veu àgil, en forma i amb energia.<br>
+      - Si <strong>una sola variable baixa molt</strong>, el rendiment cau de cop: el corredor va més lent i es veu més cansat, amb colors foscos i menys energia.<br><br>
+      Això reflecteix que en l'entrenament invisible, <strong>tots els factors són importants</strong>: un sol dèficit pot afectar molt el rendiment.
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="slider-group">
+        <label for="descans">Descans (son i descans)</label>
+        <div class="slider-wrapper">
+          <input type="range" id="descans" min="0" max="100" value="60" />
+        </div>
+        <span class="value" id="descans-val">60</span>
+      </div>
+
+      <div class="slider-group">
+        <label for="nutricio">Nutrició adequada</label>
+        <div class="slider-wrapper">
+          <input type="range" id="nutricio" min="0" max="100" value="60" />
+        </div>
+        <span class="value" id="nutricio-val">60</span>
+      </div>
+
+      <div class="slider-group">
+        <label for="recuperacio">Recuperació</label>
+        <div class="slider-wrapper">
+          <input type="range" id="recuperacio" min="0" max="100" value="60" />
+        </div>
+        <span class="value" id="recuperacio-val">60</span>
+      </div>
+
+      <div class="slider-group">
+        <label for="habits">Hàbits de vida</label>
+        <div class="slider-wrapper">
+          <input type="range" id="habits" min="0" max="100" value="60" />
+        </div>
+        <span class="value" id="habits-val">60</span>
+      </div>
+
+      <div class="slider-group">
+        <label for="mental">Salut mental</label>
+        <div class="slider-wrapper">
+          <input type="range" id="mental" min="0" max="100" value="60" />
+        </div>
+        <span class="value" id="mental-val">60</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const descans   = document.getElementById("descans");
+    const nutricio  = document.getElementById("nutricio");
+    const recuperacio = document.getElementById("recuperacio");
+    const habits    = document.getElementById("habits");
+    const mental    = document.getElementById("mental");
+
+    const descansVal   = document.getElementById("descans-val");
+    const nutricioVal  = document.getElementById("nutricio-val");
+    const recuperacioVal = document.getElementById("recuperacio-val");
+    const habitsVal    = document.getElementById("habits-val");
+    const mentalVal    = document.getElementById("mental-val");
+
+    const rendimentText = document.getElementById("rendiment-text");
+    const barFill       = document.getElementById("bar-fill");
+    const pista         = document.getElementById("pista");
+    const corredor      = document.getElementById("corredor");
+    const head          = document.getElementById("head");
+    const torso         = document.getElementById("torso");
+
+    let posicioX = 0;
+    let velocitat = 2;
+
+    function calcularRendiment() {
+      const d = parseFloat(descans.value);
+      const n = parseFloat(nutricio.value);
+      const r = parseFloat(recuperacio.value);
+      const h = parseFloat(habits.value);
+      const m = parseFloat(mental.value);
+
+      const minim = Math.min(d, n, r, h, m);
+      const mitjana = (d + n + r + h + m) / 5;
+
+      // Penalització forta si alguna variable és molt baixa
+      const penalitzacio = 0.7 * (100 - minim) / 100;
+
+      let rendiment = Math.max(0, mitjana * (1 - penalitzacio));
+      return Math.round(rendiment * 10) / 10;
+    }
+
+    function actualitza() {
+      const d = parseFloat(descans.value);
+      const n = parseFloat(nutricio.value);
+      const r = parseFloat(recuperacio.value);
+      const h = parseFloat(habits.value);
+      const m = parseFloat(mental.value);
+
+      descansVal.innerText     = d;
+      nutricioVal.innerText    = n;
+      recuperacioVal.innerText = r;
+      habitsVal.innerText      = h;
+      mentalVal.innerText      = m;
+
+      const rendiment = calcularRendiment();
+      rendimentText.innerText = `Rendiment: ${rendiment} / 100`;
+
+      barFill.style.width = `${rendiment}%`;
+
+      if (rendiment < 30) {
+        barFill.style.background = "#f44336";
+      } else if (rendiment < 55) {
+        barFill.style.background = "#ff9800";
+      } else if (rendiment < 80) {
+        barFill.style.background = "#4CAF50";
+      } else {
+        barFill.style.background = "#00e676";
+      }
+
+      velocitat = 0.1 + 0.095 * rendiment;
+
+      const minim = Math.min(d, n, r, h, m);
+
+      if (minim < 30 || rendiment < 25) {
+        corredor.style.transform = "scale(0.8) rotate(3deg)";
+        corredor.style.opacity = "0.5";
+        head.setAttribute("fill", "#500000");
+        torso.setAttribute("fill", "#201818");
+        torso.setAttribute("stroke", "#000000");
+      } else if (rendiment < 45) {
+        corredor.style.transform = "scale(0.9)";
+        corredor.style.opacity = "0.75";
+        head.setAttribute("fill", "#C06000");
+        torso.setAttribute("fill", "#403020");
+        torso.setAttribute("stroke", "#302010");
+      } else if (rendiment < 75) {
+        corredor.style.transform = "scale(1.0)";
+        corredor.style.opacity = "1.0";
+        head.setAttribute("fill", "#FFD580");
+        torso.setAttribute("fill", "#E0F7FF");
+        torso.setAttribute("stroke", "#99CBDC");
+      } else {
+        corredor.style.transform = "scale(1.15) translateY(-3px)";
+        corredor.style.opacity = "1.0";
+        head.setAttribute("fill", "#FFEBAA");
+        torso.setAttribute("fill", "#B0FFE8");
+        torso.setAttribute("stroke", "#80E0D0");
+      }
+    }
+
+    [descans, nutricio, recuperacio, habits, mental].forEach(el => {
+      el.addEventListener("input", actualitza);
+    });
+
+    actualitza();
+
+    function animar() {
+      const ample = pista.offsetWidth - corredor.offsetWidth;
+      posicioX += velocitat;
+      if (posicioX > ample) posicioX = 0;
+      corredor.style.left = posicioX + "px";
+      requestAnimationFrame(animar);
+    }
+
+    animar();
+  </script>
+</body>
+</html>
